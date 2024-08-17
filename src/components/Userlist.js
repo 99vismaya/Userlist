@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-// import axios from 'axios';
+import axios from 'axios';
 import 'primeicons/primeicons.css';
 
 function App() {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage, setUsersPerPage] = useState(10); // Number of users per page
+  const [usersPerPage, setUsersPerPage] = useState(10); 
   const [searchTerm, setSearchTerm] = useState('');
   
   const [startDisplay, setStartDisplay] = useState(1);
@@ -15,9 +15,8 @@ function App() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch(`https://randomuser.me/api/?results=${usersPerPage}&&seed=foobar`);
-        const {results} = await res.json();
-        // const response = await axios.get(`https://randomuser.me/api/?results=100`); 
+        const res = await axios.get(`https://randomuser.me/api/?results=${usersPerPage}&&seed=foobar`);
+        const { results } = res.data;
         setUsers(results);
         setFilteredUsers(results); 
       } catch (error) {
@@ -29,16 +28,17 @@ function App() {
   }, [usersPerPage]);
 
   useEffect(() => {
-    // Update the range when `filteredUsers`, `usersPerPage`, or `currentPage` changes
-    const indexOfLastUser = currentPage * usersPerPage;
-    const indexOfFirstUser = indexOfLastUser - usersPerPage;
-
-    setStartDisplay(indexOfFirstUser + 1);
-    setEndDisplay(Math.min(indexOfLastUser, filteredUsers.length));
-  }, [filteredUsers, usersPerPage, currentPage]);
+    if (searchTerm === '') {
+      setFilteredUsers(users);
+      setCurrentPage(1); 
+      setStartDisplay(1); 
+      setEndDisplay(usersPerPage); 
+    }
+  }, [searchTerm, users, usersPerPage]);
 
   const handleSearch = () => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
+
     const results = users.filter(user =>
       `${user.name.first} ${user.name.last}`.toLowerCase().includes(lowercasedSearchTerm) ||
       user.email.toLowerCase().includes(lowercasedSearchTerm) ||
@@ -46,14 +46,11 @@ function App() {
       user.location.country.toLowerCase().includes(lowercasedSearchTerm) ||
       user.phone.toLowerCase().includes(lowercasedSearchTerm)
     );
-    setFilteredUsers(results);
-    setCurrentPage(1); // Reset to the first page
-  };
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
+    setFilteredUsers(results);
+    setCurrentPage(1); 
+    setStartDisplay(1); 
+    setEndDisplay(Math.min(usersPerPage, results.length)); 
   };
 
   const moveNextRange = () => {
@@ -89,36 +86,33 @@ function App() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleKeyDown} // Add key down handler here
             placeholder="Search"
           />
           <button onClick={handleSearch}>Search</button>
         </div>
       </div>
-      <div style={{ maxHeight: "450px",
-        overflow: "auto" }}>
-      <table> 
-        <thead style={{ position: "sticky",top:"0px"}}>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Phone</th>
-            <th>Location</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredUsers.slice(startDisplay - 1, endDisplay).map((user, index) => (
-            <tr key={index}>
-              <td>{user.name.first} {user.name.last}</td>
-              <td>{user.email}</td>
-              <td>{user.phone}</td>
-              <td>{user.location.city}, {user.location.country}</td>
+      <div style={{ maxHeight: "450px", overflow: "auto" }}>
+        <table>
+          <thead style={{ position: "sticky", top: "0px" }}>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Location</th>
             </tr>
-          ))}
-        </tbody>
+          </thead>
+          <tbody>
+            {filteredUsers.slice(startDisplay - 1, endDisplay).map((user, index) => (
+              <tr key={index}>
+                <td>{user.name.first} {user.name.last}</td>
+                <td>{user.email}</td>
+                <td>{user.phone}</td>
+                <td>{user.location.city}, {user.location.country}</td>
+              </tr>
+            ))}
+          </tbody>
         </table>
       </div>
-      
 
       <div className="pagination">
         <label htmlFor="rows-per-page">Rows per page: </label>
@@ -152,7 +146,6 @@ function App() {
         ></i>
       </div>
     </div>
-    
   );
 }
 
