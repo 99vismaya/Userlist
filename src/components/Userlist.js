@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import 'primeicons/primeicons.css';
 
@@ -6,19 +6,20 @@ function App() {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [usersPerPage, setUsersPerPage] = useState(10); 
+  const [usersPerPage, setUsersPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const [filter, setFilter] = useState("Clear filter");
+
   const [startDisplay, setStartDisplay] = useState(1);
   const [endDisplay, setEndDisplay] = useState(usersPerPage);
 
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await axios.get(`https://randomuser.me/api/?results=${usersPerPage}&&seed=foobar`);
+        const res = await axios.get(`https://randomuser.me/api/?results=${usersPerPage}&seed=foobar`);
         const { results } = res.data;
         setUsers(results);
-        setFilteredUsers(results); 
+        setFilteredUsers(results);
       } catch (error) {
         console.error('Error fetching users:', error);
       }
@@ -30,28 +31,48 @@ function App() {
   useEffect(() => {
     if (searchTerm === '') {
       setFilteredUsers(users);
-      setCurrentPage(1); 
-      setStartDisplay(1); 
-      setEndDisplay(usersPerPage); 
+      setCurrentPage(1);
+      setStartDisplay(1);
+      setEndDisplay(usersPerPage);
     }
   }, [searchTerm, users, usersPerPage]);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
 
-    const results = users.filter(user =>
-      `${user.name.first} ${user.name.last}`.toLowerCase().includes(lowercasedSearchTerm) ||
-      user.email.toLowerCase().includes(lowercasedSearchTerm) ||
-      user.location.city.toLowerCase().includes(lowercasedSearchTerm) ||
-      user.location.country.toLowerCase().includes(lowercasedSearchTerm) ||
-      user.phone.toLowerCase().includes(lowercasedSearchTerm)
-    );
+    const results = users.filter(user => {
+      switch (filter) {
+        case "Name":
+          return `${user.name.first} ${user.name.last}`.toLowerCase().includes(lowercasedSearchTerm);
+        case "Email":
+          return user.email.toLowerCase().includes(lowercasedSearchTerm);
+        case "Phone":
+          return user.phone.toLowerCase().includes(lowercasedSearchTerm);
+        case "Location":
+          return user.location.city.toLowerCase().includes(lowercasedSearchTerm) ||
+                 user.location.country.toLowerCase().includes(lowercasedSearchTerm);
+        default:
+          return `${user.name.first} ${user.name.last}`.toLowerCase().includes(lowercasedSearchTerm) ||
+                 user.email.toLowerCase().includes(lowercasedSearchTerm) ||
+                 user.location.city.toLowerCase().includes(lowercasedSearchTerm) ||
+                 user.location.country.toLowerCase().includes(lowercasedSearchTerm) ||
+                 user.phone.toLowerCase().includes(lowercasedSearchTerm);
+      }
+    });
 
     setFilteredUsers(results);
-    setCurrentPage(1); 
-    setStartDisplay(1); 
-    setEndDisplay(Math.min(usersPerPage, results.length)); 
-  };
+    setCurrentPage(1);
+    setStartDisplay(1);
+    setEndDisplay(Math.min(usersPerPage, results.length));
+  }, [searchTerm, users, filter, usersPerPage]);
+
+  useEffect(() => {
+    const debouncedSearch = setTimeout(() => {
+      handleSearch();
+    }, 500);
+
+    return () => clearTimeout(debouncedSearch);
+  }, [searchTerm, handleSearch]);
 
   const moveNextRange = () => {
     const totalUsers = filteredUsers.length;
@@ -88,7 +109,19 @@ function App() {
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Search"
           />
-          <button onClick={handleSearch}>Search</button>
+        </div>
+        <div>
+          <select
+            id="filter-options"
+            value={filter}
+            onChange={(e) => setFilter(e.target.value)}
+          >
+            <option value="Clear filter">Clear Filter</option>
+            <option value="Name">Name</option>
+            <option value="Email">Email</option>
+            <option value="Phone">Phone</option>
+            <option value="Location">Location</option>
+          </select>
         </div>
       </div>
       <div style={{ maxHeight: "450px", overflow: "auto" }}>
@@ -116,22 +149,24 @@ function App() {
 
       <div className="pagination">
         <label htmlFor="rows-per-page">Rows per page: </label>
-        <select
-          id="rows-per-page"
-          value={usersPerPage}
-          onChange={(e) => {
-            setUsersPerPage(Number(e.target.value));
-            setCurrentPage(1); 
-            setStartDisplay(1); 
-            setEndDisplay(Number(e.target.value)); 
-          }}
-        >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={30}>30</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
+        <div>
+          <select
+            id="rows-per-page"
+            value={usersPerPage}
+            onChange={(e) => {
+              setUsersPerPage(Number(e.target.value));
+              setCurrentPage(1);
+              setStartDisplay(1);
+              setEndDisplay(Number(e.target.value));
+            }}
+          >
+            <option value={10}>10</option>
+            <option value={20}>20</option>
+            <option value={30}>30</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
         <p>{startDisplay} - {endDisplay} of {filteredUsers.length}</p>
         <i
           className={`pi pi-angle-left ${startDisplay === 1 ? 'disabled' : ''}`}
@@ -142,7 +177,6 @@ function App() {
           className={`pi pi-angle-right ${endDisplay >= filteredUsers.length ? 'disabled' : ''}`}
           onClick={moveNextRange}
           aria-disabled={endDisplay >= filteredUsers.length}
-          
         ></i>
       </div>
     </div>
