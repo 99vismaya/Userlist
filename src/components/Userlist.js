@@ -9,7 +9,7 @@ function App() {
   const [usersPerPage, setUsersPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState("Clear filter");
-  const [filterSelected, setFilterSelected] = useState(false);
+  const [filterSelected, setFilterSelected] = useState(false); 
 
   const [startDisplay, setStartDisplay] = useState(1);
   const [endDisplay, setEndDisplay] = useState(usersPerPage);
@@ -61,7 +61,7 @@ function App() {
                  user.email.toLowerCase().includes(lowercasedSearchTerm) ||
                  user.location.city.toLowerCase().includes(lowercasedSearchTerm) ||
                  user.location.country.toLowerCase().includes(lowercasedSearchTerm) ||
-                 user.phone.toLowerCase().includes(lowercasedSearchTerm); 
+                 user.phone.toLowerCase().includes(lowercasedSearchTerm);; 
         default:
           return true;
       }
@@ -125,10 +125,10 @@ function App() {
               onChange={(e) => {
                 const selectedFilter = e.target.value;
                 if (selectedFilter === "Clear filter") {
-                  setSearchTerm('');
+                  setSearchTerm(''); 
                 }
                 setFilter(selectedFilter);
-                setFilterSelected(true);
+                setFilterSelected(true); 
               }}
               style={{ height: "35px" }}
             >
@@ -142,7 +142,7 @@ function App() {
           </div>
         </div>
       </div>
-      <div style={{ maxHeight: "400px", overflow: "auto" }}>
+      <div style={{ maxHeight: "450px", overflow: "auto" }}>
         <table>
           <thead style={{ position: "sticky", top: "0px" }}>
             <tr>
