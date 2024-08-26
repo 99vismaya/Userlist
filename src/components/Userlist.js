@@ -9,6 +9,7 @@ function App() {
   const [usersPerPage, setUsersPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState("Clear filter");
+  const [filterSelected, setFilterSelected] = useState(false);
 
   const [startDisplay, setStartDisplay] = useState(1);
   const [endDisplay, setEndDisplay] = useState(usersPerPage);
@@ -37,6 +38,10 @@ function App() {
     }
   }, [searchTerm, users, usersPerPage]);
 
+  useEffect(() => {
+    setFilter("Clear filter"); 
+  }, []);
+
   const handleSearch = useCallback(() => {
     const lowercasedSearchTerm = searchTerm.toLowerCase();
 
@@ -51,12 +56,14 @@ function App() {
         case "Location":
           return user.location.city.toLowerCase().includes(lowercasedSearchTerm) ||
                  user.location.country.toLowerCase().includes(lowercasedSearchTerm);
-        default:
+        case "Clear filter":
           return `${user.name.first} ${user.name.last}`.toLowerCase().includes(lowercasedSearchTerm) ||
                  user.email.toLowerCase().includes(lowercasedSearchTerm) ||
                  user.location.city.toLowerCase().includes(lowercasedSearchTerm) ||
                  user.location.country.toLowerCase().includes(lowercasedSearchTerm) ||
-                 user.phone.toLowerCase().includes(lowercasedSearchTerm);
+                 user.phone.toLowerCase().includes(lowercasedSearchTerm); 
+        default:
+          return true;
       }
     });
 
@@ -102,29 +109,40 @@ function App() {
     <div className="App">
       <div className="header">
         <h1>Dummy Users Table</h1>
-        <div className="search">
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search"
-          />
-        </div>
-        <div>
-          <select
-            id="filter-options"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option value="Clear filter">Clear Filter</option>
-            <option value="Name">Name</option>
-            <option value="Email">Email</option>
-            <option value="Phone">Phone</option>
-            <option value="Location">Location</option>
-          </select>
+        <div className="filter-search">
+          <div className="search">
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Search"
+            />
+          </div>
+          <div className="custom-select" style={{ alignSelf: "center" }}>
+            <select
+              id="filter-options"
+              value={filter}
+              onChange={(e) => {
+                const selectedFilter = e.target.value;
+                if (selectedFilter === "Clear filter") {
+                  setSearchTerm('');
+                }
+                setFilter(selectedFilter);
+                setFilterSelected(true);
+              }}
+              style={{ height: "35px" }}
+            >
+              {!filterSelected && <option value="Clear filter" disabled hidden>Filter</option>}
+              <option value="Clear filter">Clear Filter</option>
+              <option value="Name">Name</option>
+              <option value="Email">Email</option>
+              <option value="Phone">Phone</option>
+              <option value="Location">Location</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div style={{ maxHeight: "450px", overflow: "auto" }}>
+      <div style={{ maxHeight: "400px", overflow: "auto" }}>
         <table>
           <thead style={{ position: "sticky", top: "0px" }}>
             <tr>

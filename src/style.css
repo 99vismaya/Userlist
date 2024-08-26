@@ -70,12 +70,7 @@
       align-items: center;
       gap :10px;
   }
-  
-  p{
-    position: relative;
-    top: 10px;
-  }
-  
+    
   .pi-angle-left, .pi-angle-right {
     cursor: pointer;
     font-size: 1em; 
@@ -97,3 +92,7 @@
     overflow-y: auto;
   }
   
+.filter-search{
+  display: flex;
+  gap:10px
+}
